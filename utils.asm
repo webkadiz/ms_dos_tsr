@@ -1,8 +1,6 @@
 %ifndef utils
 %define utils
 
-jmp skipUtils
-
 %macro genIntCatcher 1
 
 int%1: dd 0
@@ -126,5 +124,3 @@ owc_file:
 
 
 %endif
-
-skipUtils:
