@@ -1,111 +1,74 @@
 org 100h
-
 start:
+jmp init
 
 %include "utils.asm"
+%include "bio.asm"
 
-jmp init
 
 message: db 'hello', 0dh, 0ah, '$'
 f3: db 'f3 pressed', 0dh, 0ah, '$'
 end: db 'end', '$'
-filehandle: dw 0
-filename: db 'log', 0
-logData: times 10 db 0
-cseg: dw 0
+log_file_handle: dw 0
+log_file_name: db 'log', 0
+log_data: times 10 db 0
+scan: db 0
+
 
 genIntCatcher 9h
 
+
 handleInt9h:
-    mov cx, cs
-    mov ds, cx
-    mov cx, 0040h
-    mov es, cx
+    push ds
+    push cs
+    pop ds
 
-    mov ah, 3dh
-    mov al, 1
-    mov dx, filename
-    int 21h
+    pusha
 
-    mov [filehandle], ax
-    mov ah, 40h
-    mov bx, [filehandle] 
-    mov cx, 10
-    mov dx, es:001eh
-    int 21h
+    in al, 60h
 
-    mov ah, 3eh
-    mov bx, [filehandle]
-    int 21h
-
-    mov ah, 0x9
-    mov dx, message
-    int 0x21 
-    ; in al, 60h
-    ; out 60h, al
-    jmp far [int9h]
-    pushf
-    iret
-    mov ah, 0
-    int 16h
-    cmp al, 0
-    jne end16
-    cmp ah, 61
+    cmp al, 0beh
+    push handleInt9hEnd
     je handleF3
-end16:
-    mov ah, 0x9
-    mov dx, end
-    int 0x21 
-    iret
+    pop dx
+    ; cmp al, 0beh
+    ; je handleF4
+    ; cmp al, 0bfh
+    ; je handleF5
+    ; cmp al, 0c0h
+    ; je handleF6
+    ; cmp al, 0c1h
+    ; je handleF7
+    ; mov word [log_data], 40h
+    ; push 10
+    ; push log_data
+    ; push log_file_name
+    ; call owc_file
 
-size equ init-start
+handleInt9hEnd:
+
+    popa
+    pop ds
+
+    jmp far [cs:int9h]
+
+
+handleF3:
+    ; call restoreInt9h
+    call print_bio
+    ret
+
+
 init:
-    cli
-    mov [cseg], ds
-    mov ax, size
+    mov dx, (init-start+256+15) >> 4
     call storeInt9h
     call setInt9h
 
+    push init
+    push start
+    call make_resident
 
-    mov [logData], ds
-    mov [logData + 2], word message
-
-    mov ah, 40h
-    mov bx, [filehandle] 
-    mov cx, 10
-    mov dx, logData
-    int 21h
-
-    mov ah, 3eh
-    mov bx, [filehandle]
-    int 21h
-
-    mov ah, 1
-    int 16h
-    mov ah, 0
-    int 16h
-    mov ah, 0
-    int 16h
-
-    mov al, 60
-    out 61h, al
-    out 61h, al
-
-    ; call restoreInt9h
-    mov ah, 31h
-    mov al, 0
-    mov dx, (init-start+256+15) >> 4
-    sti
-    int 21h
-
-    call exit
-
-handleF3:
-    mov ah, 0x9
-    mov dx, f3
-    int 0x21 
-    jmp end16
 
 exit:
 ; завершаем программу
-    int 0x20 
+    int 0x20
