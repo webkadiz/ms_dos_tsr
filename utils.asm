@@ -2,12 +2,12 @@
 %define utils
 
 
-%macro genIntCatcher 1
+%macro gen_int_catcher 1
 
 int%1: dd 0
 
 
-storeInt%1:
+store_int%1:
 ; получаем адрес прерывания
     mov ah, 35h
     mov al, %1
@@ -18,15 +18,15 @@ storeInt%1:
     ret
 
 
-setInt%1:
+set_int%1:
     mov ah, 25h
     mov al, %1
-    mov dx, handleInt%1
+    mov dx, handle_int%1
     int 21h
     ret
 
 
-restoreInt%1:
+restore_int%1:
     mov ah, 25h
     mov al, %1
 ; сохраняем ds
