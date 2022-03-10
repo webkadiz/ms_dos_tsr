@@ -1,10 +1,11 @@
 %ifdef debug
 org 100h
+jmp start
 %endif
 
 %include "utils.asm"
 
-bio: db "я┐╜я┐╜я┐╜ченя┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜слая┐╜ я┐╜ьвоя┐╜я┐╜я┐╜, я┐╜я┐╜5-42я┐╜, я┐╜я┐╜риая┐╜я┐╜ 15", 0xd, 0xa
+bio: db "Ткаченко Владислав Львович, группа ИУ5-42Б, вариант 15", 0xd, 0xa
 bioLength: equ $-bio
 
 printBio:
@@ -24,6 +25,7 @@ printBio:
     ret
 
 %ifdef debug
+start:
 call printBio
 int 20h
 %endif
