@@ -16,6 +16,17 @@ italic_enables: dw 0
 
 
 gen_int_catcher 9h
+gen_int_catcher 2fh
+
+
+handle_int2fh:
+    cmp ah, 0c2h
+    jne .else
+.then:
+    mov ah, 0
+    iret
+.else:
+    jmp far [cs:int2fh]
 
 
 handle_int9h:
@@ -33,6 +44,10 @@ handle_int9h:
     cmp al, 0bfh
     push .endif
     je handle_F5
+    pop dx
+    cmp al, 0c1h
+    push .endif
+    je handle_F7
     pop dx
 
 .endif:
@@ -60,7 +75,16 @@ handle_F5:
     ret
 
 
+handle_F7:
+
 init:
+    mov ah, 0c2h
+    int 2fh
+    cmp ah, 0
+    je tsr_loaded
+
+    call store_int2fh
+    call set_int2fh
     call store_int9h
     call set_int9h
 
@@ -68,6 +92,6 @@ init:
     push start
     call make_resident
 
-
+tsr_loaded:
 exit:
     int 20h
