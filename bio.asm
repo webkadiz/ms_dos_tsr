@@ -5,7 +5,7 @@ jmp start
 
 %include "utils.asm"
 
-bio: db "Ткаченко Владислав Львович, группа ИУ5-42Б, вариант 15", 0xd, 0xa
+bio: db 0xd, 0xa, "Ткаченко Владислав Львович, группа ИУ5-42Б, вариант 15"
 bioLength: equ $-bio
 
 printBio:
