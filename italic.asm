@@ -1,7 +1,12 @@
-section .data
+%ifdef debug
+org 100h
+jmp start
+%endif
 
-rusMCode: equ 140
-regularM:
+
+rus_M_code equ 140
+
+regular_M:
 db 00000000b 
 db 00000000b 
 db 00000000b 
@@ -18,7 +23,8 @@ db 11000011b
 db 00000000b 
 db 00000000b 
 db 00000000b 
-italicM:
+
+italic_M:
 db 00000000b
 db 00000000b
 db 00000000b
@@ -36,3 +42,39 @@ db 00000000b
 db 00000000b
 db 00000000b
 
+
+enable_italic_M:
+    push bp
+    push ds
+    pop es
+    mov bp, italic_M
+    mov ax, 1100h
+    mov bh, 16
+    mov bl, 0
+    mov cx, 1
+    mov dx, rus_M_code
+    int 10h
+    pop bp
+    ret
+
+
+disable_italic_M:
+    push bp
+    push ds
+    pop es
+    mov bp, regular_M
+    mov ax, 1100h
+    mov bh, 16
+    mov bl, 0
+    mov cx, 1
+    mov dx, rus_M_code
+    int 10h
+    pop bp
+    ret
+
+
+%ifdef debug
+start:
+call enable_italic_M
+int 20h
+%endif
