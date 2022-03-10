@@ -4,12 +4,8 @@ org 100h
 
 %include "utils.asm"
 
-section .data
-
 bio: db "���祭�� �����᫠� �좮���, ��5-42�, ��ਠ�� 15", 0xd, 0xa
 bioLength: equ $-bio
-
-section .text
 
 printBio:
     call getRowsCount
