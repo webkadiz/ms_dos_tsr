@@ -133,4 +133,21 @@ owc_file:
     ret 6
 
 
+; [bp-4] first param  - start address
+; [bp-6] second param - init address
+make_resident:
+    push bp
+    mov bp, sp
+    mov dx, [bp+6]
+    sub dx, [bp+4]
+    add dx, 256
+    add dx, 15
+    shr dx, 4
+    mov ah, 31h
+    mov al, 0
+    int 21h
+    pop bp
+    ret 4
+
+
 %endif
