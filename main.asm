@@ -7,6 +7,7 @@ jmp init
 %include "bio.asm"
 %include "italic.asm"
 %include "russifier.asm"
+%include "uppercase_locker.asm"
 
 
 test_message: db 'test', 0dh, 0ah, '$'
@@ -15,6 +16,7 @@ log_file_name: db 'log', 0
 log_data: times 10 db 0
 italic_enabled: dw 0
 russifier_enabled: dw 0
+uppercase_locker_enabled: dw 0
 
 
 gen_int_catcher 9h
@@ -84,6 +86,7 @@ handle_int16h:
     je .process_end
 
     call russify_char
+    call uppercase_lock
 
 .process_end:
     pop ds
@@ -124,7 +127,16 @@ handle_F6:
 
 
 handle_F7:
+    cmp word [uppercase_locker_enabled], 0
+    jne .else
+.then:
+    inc word [uppercase_locker_enabled]
+    jmp .endif
+.else:
+    dec word [uppercase_locker_enabled]
+.endif:
     ret
+
 
 init:
     mov ah, 0c2h
