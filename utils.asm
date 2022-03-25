@@ -2,6 +2,8 @@
 %define utils
 
 
+sword: equ 2
+
 %macro gen_int_catcher 1
 
 int%1: dd 0
@@ -133,8 +135,8 @@ owc_file:
     ret 6
 
 
-; [bp-4] first param  - start address
-; [bp-6] second param - init address
+; [bp+4] first param  - start address
+; [bp+6] second param - init address
 make_resident:
     push bp
     mov bp, sp
@@ -149,5 +151,53 @@ make_resident:
     pop bp
     ret 4
 
+
+; work with integers less then 2560
+; [bp+4] first param  - int
+; [bp+6] second param - string address
+suint_to_str:
+    push bp
+    mov bp, sp
+    pusha
+    mov si, [bp+6]
+
+    mov ax, [bp+4]
+    mov dl, 10
+.loop:
+    div dl
+    mov [si], ah
+    add [si], byte 48
+    inc si
+    mov ah, 0
+    cmp al, 0
+    je .endloop
+    jmp .loop
+.endloop:
+    push si
+    mov di, [bp+6]
+
+    mov cx, si
+    sub cx, [bp+6]
+    dec si
+    mov ax, cx
+    mov bl, 2
+    div bl
+    mov cl, al
+    cmp cl, 0
+    je .end
+.reverse:
+    mov al, [di]
+    mov dl, [si]
+    mov [si], al
+    mov [di], dl
+    inc di
+    dec si
+    loop .reverse
+.end:
+    pop si
+    mov byte [si], '$'
+    popa
+    pop bp
+    ret 4
 
 %endif
