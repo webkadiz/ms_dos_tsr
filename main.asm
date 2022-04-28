@@ -8,6 +8,7 @@ jmp init
 %include "italic.asm"
 %include "russifier.asm"
 %include "uppercase_locker.asm"
+%include "event_loop.asm"
 
 
 test_message: db 'test', 0dh, 0ah, '$'
@@ -19,9 +20,10 @@ russifier_enabled: dw 0
 uppercase_locker_enabled: dw 0
 
 
+gen_int_catcher 8h
 gen_int_catcher 9h
-gen_int_catcher 2fh
 gen_int_catcher 16h
+gen_int_catcher 2fh
 
 
 handle_int2fh:
@@ -32,6 +34,37 @@ handle_int2fh:
     iret
 .else:
     jmp far [cs:int2fh]
+
+
+handle_int8h:
+    push ds
+    push cs
+    pop ds
+    pusha
+    ; bx - current event loop item address
+    mov bx, [event_loop_head]
+.event_loop_start:
+    cmp bx, word 0
+    je .event_loop_end
+    cmp [bx+event_loop_item.timeout], word 0
+    jle .call_callback
+
+    sub [bx+event_loop_item.timeout], word 55
+    jmp .event_loop_next_iter
+.call_callback:
+    pusha
+    call [bx+event_loop_item.callback]
+    popa
+    call delete_event_loop_item
+    mov bx, [event_loop_head]
+    jmp .event_loop_start
+.event_loop_next_iter:
+    mov bx, [bx+event_loop_item.next]
+    jmp .event_loop_start
+.event_loop_end:
+    popa
+    pop ds
+    jmp far [cs:int8h]
 
 
 handle_int9h:
@@ -96,7 +129,10 @@ handle_int16h:
 
 
 handle_F4:
-    call print_bio
+    mov ax, print_bio
+    mov dx, 7000
+    call create_event_loop_item
+    call push_back_event_loop_item
     ret
 
 
@@ -144,12 +180,16 @@ init:
     cmp ah, 0
     je tsr_loaded
 
-    call store_int2fh
-    call set_int2fh
+    call store_int8h
+    call set_int8h
     call store_int9h
     call set_int9h
     call store_int16h
     call set_int16h
+    call store_int2fh
+    call set_int2fh
+
+    call init_event_loop
 
     push init
     push start

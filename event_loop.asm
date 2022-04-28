@@ -2,6 +2,7 @@
 %define event_count 20
 %endif
 
+; size 8 bytes
 struc event_loop_item
     .callback: resw 1
     .timeout: resw 1
@@ -26,18 +27,21 @@ event_loop_list: resb 200
 section .text
 
 
+; fill alloc_list by event loop item addresses
 init_event_loop:
     mov cx, event_count
 .loop:
     mov si, event_count
     sub si, cx
 
+    ; dx - event loop item address
     mov dx, event_loop_list
     mov ax, si
     mov bl, event_loop_item_size
     mul bl
     add dx, ax
 
+    ; di - event loop item index in alloc_list
     mov ax, si
     mov bl, sword
     mul bl
@@ -132,6 +136,7 @@ push_back_event_loop_item:
 
 ; bx - item address
 delete_event_loop_item:
+    pusha
     cmp bx, 0
     je .not_item
     cmp [event_loop_head], bx
@@ -155,4 +160,5 @@ delete_event_loop_item:
 .end:
     call _dealloc_event_loop_item
 .not_item:
+    popa
     ret
