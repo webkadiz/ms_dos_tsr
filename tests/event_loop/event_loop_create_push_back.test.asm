@@ -17,17 +17,17 @@ start:
     call init_event_loop
 
     mov ax, callback
-    mov dx, 1
+    mov dx, 1000
     call create_event_loop_item
     call push_back_event_loop_item
 
     mov ax, callback2
-    mov dx, 2
+    mov dx, 2000
     call create_event_loop_item
     call push_back_event_loop_item
 
     mov ax, callback
-    mov dx, 3
+    mov dx, 3000
     call create_event_loop_item
     call push_back_event_loop_item
 
@@ -40,7 +40,7 @@ start:
 
     cmp [event_loop_list], word callback
     test
-    cmp [event_loop_list+2], word 1
+    cmp [event_loop_list+2], word 1000
     test
     cmp [event_loop_list+4], word 0
     test
@@ -49,7 +49,7 @@ start:
 
     cmp [event_loop_list+8], word callback2
     test
-    cmp [event_loop_list+10], word 2
+    cmp [event_loop_list+10], word 2000
     test
     cmp [event_loop_list+12], word event_loop_list
     test
