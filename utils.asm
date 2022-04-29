@@ -31,9 +31,8 @@ set_int%1:
 restore_int%1:
     mov ah, 25h
     mov al, %1
-; сохраняем ds
-    mov cx, ds
-    mov es, cx 
+    push ds
+    push cx
 ; база адреса прерывания
     mov cx, es:[int%1 + 2]
     mov ds, cx 
@@ -41,9 +40,8 @@ restore_int%1:
     mov dx, es:[int%1] 
 ; возвращаем оригинальный адрес прерывания
     int 21h
-; возвращаем ds
-    mov cx, es
-    mov ds, cx 
+    pop cx
+    pop ds
     ret
 
 %endmacro
@@ -199,5 +197,69 @@ suint_to_str:
     popa
     pop bp
     ret 4
+
+
+; dx first param - message
+print_msg:
+    push ax
+    mov ah, 09h
+    int 21h
+    pop ax
+    ret
+
+
+; es return value - psp address
+get_psp:
+    push bx
+    mov ah, 51h
+    int 21h
+    mov es, bx
+    pop bx
+    ret
+
+
+unload_env:
+    call get_psp
+    ; [psp:002ch] - address DOS environment
+    mov es, [es:002ch]
+    mov ah, 49h
+    int 21h
+    jnc .env_free
+    mov dx, env_unload_fail_msg
+    call print_msg
+    jmp .end
+.env_free:
+    mov dx, env_unload_success_msg
+    call print_msg
+.end:
+    ret
+
+
+; ax - return value - 1 means help skiped, 0 means help printed
+process_help:
+    pusha
+    call get_psp
+    mov si, 81h
+.spaces_skip_start:
+    cmp [es:si], byte ' '
+    jne .spaces_skip_end
+    inc si
+    jmp .spaces_skip_start
+.spaces_skip_end:
+    cmp [es:si], byte '/'
+    jne .help_skip
+    inc si
+    cmp [es:si], byte '?'
+    jne .help_skip
+    mov dx, help_msg
+    call print_msg
+    popa
+    mov ax, 0
+    ret
+.help_skip:
+    popa
+    mov ax, 1
+    ret
+
 
 %endif

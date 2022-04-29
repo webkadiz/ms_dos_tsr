@@ -4,6 +4,7 @@ jmp init
 
 
 %include "utils.asm"
+%include "strings866.asm"
 %include "bio.asm"
 %include "italic.asm"
 %include "russifier.asm"
@@ -28,11 +29,16 @@ gen_int_catcher 2fh
 
 handle_int2fh:
     cmp ah, 0c2h
-    jne .else
-.then:
+    jne .next
     mov ah, 0
     iret
-.else:
+.next:
+    cmp ah, 0c3h
+    jne .end
+    push cs
+    pop es
+    iret
+.end:
     jmp far [cs:int2fh]
 
 
@@ -40,7 +46,7 @@ handle_int8h:
     push ds
     push cs
     pop ds
-    pusha
+    push bx
     ; bx - current event loop item address
     mov bx, [event_loop_head]
 .event_loop_start:
@@ -62,7 +68,7 @@ handle_int8h:
     mov bx, [bx+event_loop_item.next]
     jmp .event_loop_start
 .event_loop_end:
-    popa
+    pop bx
     pop ds
     jmp far [cs:int8h]
 
@@ -91,6 +97,11 @@ handle_int9h:
     push .endif
     je handle_F7
     pop dx
+    cmp al, 0c2h
+    push .endif
+    je handle_F8
+    pop dx
+
 .endif:
     popa
     pop ds
@@ -174,7 +185,16 @@ handle_F7:
     ret
 
 
+handle_F8:
+
+
 init:
+    call process_help
+    ; exit if help is printed
+    cmp ax, 0
+    je exit
+
+    ; check if tsr already loaded
     mov ah, 0c2h
     int 2fh
     cmp ah, 0
@@ -191,10 +211,39 @@ init:
 
     call init_event_loop
 
+    call unload_env
+    mov dx, resident_load_msg
+    call print_msg
     push init
     push start
     call make_resident
+    mov dx, resident_load_msg
+    call print_msg
 
 tsr_loaded:
+    call get_psp
+    ; parameter list not empty
+    cmp [es:80h], byte 0
+    jne exit
+tsr_unload:
+    ; get es of tsr program
+    mov ah, 0c3h
+    int 2fh
+    call restore_int8h
+    call restore_int9h
+    call restore_int16h
+    call restore_int2fh
+    mov dx, ints_unload_msg
+    call print_msg
+    mov ah, 49h
+    int 21h
+    jc tsr_unload_fail
+    mov dx, resident_unload_success_msg
+    call print_msg
+    jmp exit
+tsr_unload_fail:
+    mov dx, resident_unload_fail_msg
+    call print_msg
+
 exit:
     int 20h
