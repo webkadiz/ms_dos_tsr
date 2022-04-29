@@ -262,4 +262,10 @@ process_help:
     ret
 
 
+; вывод символа на экран
+putch:
+    mov ah, 02h
+    int 21h
+    ret
+
 %endif

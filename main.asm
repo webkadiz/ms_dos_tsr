@@ -9,6 +9,7 @@ jmp init
 %include "italic.asm"
 %include "russifier.asm"
 %include "uppercase_locker.asm"
+%include "hex_mode.asm"
 %include "event_loop.asm"
 
 
@@ -19,6 +20,7 @@ log_data: times 10 db 0
 italic_enabled: dw 0
 russifier_enabled: dw 0
 uppercase_locker_enabled: dw 0
+hex_mode_enabled: dw 0
 
 
 gen_int_catcher 8h
@@ -131,6 +133,7 @@ handle_int16h:
 
     call russify_char
     call uppercase_lock
+    call hex_char
 
 .process_end:
     pop ds
@@ -186,6 +189,15 @@ handle_F7:
 
 
 handle_F8:
+    cmp word [hex_mode_enabled], 0
+    jne .else
+.then:
+    inc word [hex_mode_enabled]
+    jmp .endif
+.else:
+    dec word [hex_mode_enabled]
+.endif:
+    ret
 
 
 init:
