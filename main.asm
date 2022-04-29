@@ -205,11 +205,16 @@ init:
     cmp ax, 0
     je exit
 
+    call get_psp
+    ; parameter list not empty
+    cmp [es:80h], byte 0
+    jne clp_error
+
     ; check if tsr already loaded
     mov ah, 0c2h
     int 2fh
     cmp ah, 0
-    je tsr_loaded
+    je tsr_unload
 
     call store_int8h
     call set_int8h
@@ -231,11 +236,6 @@ init:
     mov dx, resident_load_msg
     call print_msg
 
-tsr_loaded:
-    call get_psp
-    ; parameter list not empty
-    cmp [es:80h], byte 0
-    jne exit
 tsr_unload:
     ; get es of tsr program
     mov ah, 0c3h
@@ -255,6 +255,11 @@ tsr_unload:
 tsr_unload_fail:
     mov dx, resident_unload_fail_msg
     call print_msg
+
+clp_error:
+    mov dx, clp_error_msg
+    call print_msg
+    jmp exit
 
 exit:
     int 20h
