@@ -5,11 +5,6 @@ jmp start
 
 %include "utils.asm"
 
-
-bio: db 0xd, 0xa, "Ткаченко Владислав Львович, группа ИУ5-42Б, вариант 15"
-bio_length: equ $-bio
-
-
 print_bio:
     call get_rows_count
     push word 0
