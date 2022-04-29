@@ -13,7 +13,6 @@ jmp init
 %include "event_loop.asm"
 
 
-test_message: db 'test', 0dh, 0ah, '$'
 log_file_handle: dw 0
 log_file_name: db 'log', 0
 log_data: times 10 db 0
